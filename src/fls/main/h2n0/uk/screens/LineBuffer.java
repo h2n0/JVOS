@@ -19,6 +19,7 @@ public class LineBuffer {
 	private int padding;
 	private final ComputerScreen screen;
 	private boolean waitForInt;
+	private int textColor;
 	public LineBuffer(ComputerScreen s,Renderer r){
 		int ys = r.h/8;
 		this.lines = new String[ys];
@@ -31,6 +32,7 @@ public class LineBuffer {
 		this.padding = 0;
 		this.screen = s;
 		this.waitForInt = false;
+		setTextColor(15);
 		enable();
 	}
 	
@@ -76,16 +78,16 @@ public class LineBuffer {
 			String c = getLine(y);
 			if(y == currentLine){
 				if(this.currentBuffer == "")return;
-				Text.drawString(this.currentBuffer, this.rend, padding, y, Renderer.White);
+				Text.drawString(this.currentBuffer, this.rend, padding, y, this.textColor);
 			}else{
 				if(c == "")continue;
-				Text.drawString(c, this.rend, padding, y, Renderer.White);
+				Text.drawString(c, this.rend, padding, y, this.textColor);
 			}
 		}
 		
 		if(this.cur1){
 			int tx = this.currentBuffer.length();
-			Text.drawString(Text.cur2, this.rend, tx>0?tx:padding, this.currentLine, Renderer.White);
+			Text.drawString(Text.cur2, this.rend, tx>0?tx:padding, this.currentLine, this.textColor);
 		}
 	}
 	
@@ -105,7 +107,7 @@ public class LineBuffer {
 				this.addSpace();
 				return;
 			}
-			this.addLine(Command.instance.parseCommand(this, this.currentBuffer));
+			this.addLine(Command.instance.parseSpecialCommand(this.screen, this.currentBuffer));
 			this.currentBuffer = "";
 		}else{// Anything else
 			this.currentBuffer += c;
@@ -136,5 +138,9 @@ public class LineBuffer {
 	
 	public void waitForInterupt(){
 		this.waitForInt = true;
+	}
+	
+	public void setTextColor(int c){
+		this.textColor = c;
 	}
 }

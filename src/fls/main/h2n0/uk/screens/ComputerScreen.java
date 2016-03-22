@@ -13,11 +13,13 @@ public abstract class ComputerScreen extends Screen{
 	protected final int w,h;
 	public LineBuffer lineBuffer;
 	protected Program prog;
+	private int fillColor;
 	public ComputerScreen(Renderer r) {
 		this.rend = r;
 		this.w = r.w;
 		this.h = r.h;
 		this.lineBuffer = new LineBuffer(this,r);
+		this.setFillColor(15);
 	}
 
 	@Override
@@ -32,6 +34,10 @@ public abstract class ComputerScreen extends Screen{
 		this.tick();
 	}
 	
+	public void fill(){
+		this.rend.fill(this.fillColor);
+	}
+	
 	public abstract void draw();
 	
 	public abstract void tick();
@@ -42,6 +48,10 @@ public abstract class ComputerScreen extends Screen{
 	
 	public void keyTyped(char c){
 		this.lineBuffer.useChar(c);
+	}
+	
+	public void setFillColor(int col){
+		this.fillColor = col;
 	}
 
 }

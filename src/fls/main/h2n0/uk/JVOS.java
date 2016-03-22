@@ -7,16 +7,15 @@ import java.awt.image.BufferedImage;
 
 import fls.engine.main.Init;
 import fls.engine.main.input.Input;
-import fls.main.h2n0.uk.screens.BiosScreen;
 import fls.main.h2n0.uk.screens.InitiallScreen;
-import fls.main.h2n0.uk.screens.OsScreen;
 
+@SuppressWarnings("serial")
 public class JVOS extends Init{
 	
 	
 	public JVOS(){
 		super("JVOS V0.1",640,480);
-		this.useCustomBufferedImage(this.width, this.height, BufferedImage.TYPE_INT_RGB);
+		this.useCustomBufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		this.setImageScale(1);
 		this.setInput(new Input(this,Input.KEYS,Input.MOUSE));
 		this.skipInit();

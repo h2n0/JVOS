@@ -11,12 +11,13 @@ public class OsScreen extends ComputerScreen {
 
 	public void postInit() {
 		this.prog = new Program(this,"test");
+		this.setFillColor(Renderer.DBlue);
 	}
 	
 
 	@Override
 	public void draw() {
-		this.rend.fill(Renderer.DBlue);
+		this.fill();
 		this.lineBuffer.render();
 		this.rend.render();
 	}
