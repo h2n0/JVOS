@@ -1,6 +1,5 @@
 package fls.main.h2n0.uk.screens;
 
-import fls.main.h2n0.uk.program.Program;
 import fls.main.h2n0.uk.util.Renderer;
 
 public class OsScreen extends ComputerScreen {
@@ -10,7 +9,6 @@ public class OsScreen extends ComputerScreen {
 	}
 
 	public void postInit() {
-		this.prog = new Program(this,"test");
 		this.setFillColor(Renderer.DBlue);
 	}
 	

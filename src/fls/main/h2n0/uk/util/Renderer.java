@@ -28,6 +28,11 @@ public class Renderer {
 	public static final int White = 15;
 
 	private final int max, min;
+	
+	private int cw,ch;
+	private int[] chunkyPix;
+	private boolean[] chunyDirtyFlags;
+	private boolean useChunky;
 
 	public Renderer(BufferedImage i) {
 		this.max = 255;
@@ -36,15 +41,28 @@ public class Renderer {
 		this.w = i.getWidth();
 		this.h = i.getHeight();
 		this.pixles = new int[w * h];
+		this.cw = this.w / 8;
+		this.ch = this.h / 8;
+		this.chunkyPix = new int[this.cw * this.ch];
 		this.dirtyFlags = new boolean[this.h];
+		this.chunyDirtyFlags = new boolean[this.ch];
+		useRegular();
 		setupColor();
 		refresh();
 	}
 
 	public void render() {
-		for (int i = 0; i < this.h; i++) {
-			if (this.dirtyFlags[i]) {
-				this.renderRow(i);
+		if(!this.useChunky){
+			for (int i = 0; i < this.h; i++) {
+				if (this.dirtyFlags[i]) {
+					this.renderRow(i);
+				}
+			}
+		}else{
+			for(int i = 0; i < this.ch; i++){
+				if(this.chunyDirtyFlags[i]){
+					this.renderChunkyRow(i);
+				}
 			}
 		}
 		this.clearDirtyFlags();
@@ -63,26 +81,46 @@ public class Renderer {
 	}
 
 	public void clearDirtyFlags() {
-		for (int i = 0; i < this.dirtyFlags.length; i++) {
-			this.dirtyFlags[i] = false;
+		if(!this.useChunky){
+			for (int i = 0; i < this.dirtyFlags.length; i++) {
+				this.dirtyFlags[i] = false;
+			}
+		}else{
+			for(int i = 0; i < this.chunyDirtyFlags.length; i++){
+				this.chunyDirtyFlags[i] = false;
+			}
 		}
 	}
 
 	public void refresh() {
-		for (int i = 0; i < this.dirtyFlags.length; i++) {
-			this.dirtyFlags[i] = true;
+		if(!this.useChunky){
+			for (int i = 0; i < this.dirtyFlags.length; i++) {
+				this.dirtyFlags[i] = true;
+			}
+		}else{
+			for(int i = 0; i < this.chunyDirtyFlags.length; i++){
+				this.chunyDirtyFlags[i] = true;
+			}
 		}
 	}
 
 	public void setPixel(int x, int y, int col) {
-		if (!isValid(x, y))
-			return;
+		if (!isValid(x, y))return;
 		if (col > this.color.length)
 			col = this.color.length;
 		if (col < 0)
 			col = 0;
-		this.pixles[x + y * w] = this.color[col];
-		this.dirtyFlags[y] = true;
+		if(!this.useChunky){
+			this.pixles[x + y * w] = this.color[col];
+			this.dirtyFlags[y] = true;
+		}else{
+			for(int i = 0; i < 8*8; i++){
+				int ox = i % 8;
+				int oy = i / 8;
+				this.pixles[(x+ox) + (y+oy) * this.cw] = this.color[col];
+				this.dirtyFlags[(y + oy)] = true;
+			}
+		}
 	}
 
 	public BufferedImage getImage() {
@@ -153,7 +191,7 @@ public class Renderer {
 				int ay = y + yy;
 				if (!isValid(ax, ay))
 					continue;
-				res[xx + yy * w] = this.pixles[ax + ay * this.w];
+				res[xx + yy * w] = this.useChunky?this.chunkyPix[ax + ay * this.cw]:this.pixles[ax + ay * this.w];
 			}
 		}
 		return res;
@@ -167,14 +205,17 @@ public class Renderer {
 		this.image.setRGB(0, ry, this.w, 1, rowPix, 0, this.w);
 	}
 	
-	public void renderRowSec(int y){
-		for(int i = 0; i <= 8; i++){
-			renderRow(y + i);
-		}
+	public void renderChunkyRow(int y){
+		if(!isValid(0,y*8))return;
+		y*=8;
+		int[] rowPix = getPixels(0,y,this.cw,1);
+		for(int i = 0; i < 8; i++)this.image.setRGB(0, y+i, this.cw, 1, rowPix, 0, this.cw);
 	}
 
 	private boolean isValid(int x, int y) {
-		if (x < 0 || y < 0 || x >= this.w || y >= this.h)
+		boolean nc = !this.useChunky && (x >= this.w || y >= this.h);
+		boolean cp = this.useChunky && (x >= this.cw || y >= this.ch);
+		if (x < 0 || y < 0 || nc || cp)
 			return false;
 		return true;
 	}
@@ -185,6 +226,16 @@ public class Renderer {
 	
 	private int makeBGR(int r, int g, int b){
 		return makeRGB(b,g,r);
+	}
+	
+	public void useChunky(){
+		this.useChunky = true;
+		refresh();
+	}
+	
+	public void useRegular(){
+		this.useChunky = false;
+		refresh();
 	}
 
 }

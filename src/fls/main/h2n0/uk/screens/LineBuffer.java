@@ -62,10 +62,10 @@ public class LineBuffer {
 	}
 	
 	public void clearBuffer(){
+		this.currentLine = 0;
 		for(int i = 0; i < this.lines.length; i++){
 			this.lines[i] = "";
 		}
-		this.currentLine = 0;
 	}
 	
 	public String getLine(int y){
@@ -94,6 +94,7 @@ public class LineBuffer {
 	public void useChar(char c){
 		if(!use)return;
 		if(waitForInt){
+			System.out.println(c);
 			this.screen.onReturn();
 			this.waitForInt = false;
 			return;
@@ -107,7 +108,7 @@ public class LineBuffer {
 				this.addSpace();
 				return;
 			}
-			this.addLine(Command.instance.parseSpecialCommand(this.screen, this.currentBuffer));
+			Command.instance.parseSpecialCommand(this.screen, this.currentBuffer);
 			this.currentBuffer = "";
 		}else{// Anything else
 			this.currentBuffer += c;
@@ -142,5 +143,9 @@ public class LineBuffer {
 	
 	public void setTextColor(int c){
 		this.textColor = c;
+	}
+	
+	public boolean waitingForInterupt(){
+		return this.waitForInt;
 	}
 }

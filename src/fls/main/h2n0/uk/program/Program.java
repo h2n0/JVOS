@@ -5,7 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 
 import fls.engine.main.io.FileIO;
+import fls.main.h2n0.uk.interpreters.Command;
 import fls.main.h2n0.uk.screens.ComputerScreen;
+import fls.main.h2n0.uk.util.Facts;
 import fls.main.h2n0.uk.util.Interpriter;
 
 public class Program {
@@ -34,22 +36,76 @@ public class Program {
 	}
 	
 	public void nextLine(){
-		if(!running)return;
-		this.currentLine ++;
+		if(!running || this.screen.lineBuffer.waitingForInterupt())return;
 		if(this.currentLine >= this.fileLines.length){
 			this.terminate();
 			return;
 		}
 		String line = this.fileLines[this.currentLine];
-		String[] secs = line.trim().split(" ");
-		for(int i = 0; i < secs.length; i++){
-			String p = secs[i];
-			p = p.trim();
-			if(p.contains("num")){
-				getValue(secs[i + 1],buildVar(secs,i + 3));
-				break;
+		
+		if(line.contains("num")){//Deceleration of variables
+			String[] secs = line.trim().split(" ");
+			for(int i = 0; i < secs.length; i++){
+				String p = secs[i];
+				p = p.trim();
+				if(p.contains("num")){
+					getValue(secs[i + 1],buildVar(secs,i + 3));
+					break;
+				}
 			}
+		}else if(line.contains("=")){//Updating variables
+			String[] secs = line.trim().split(" ");
+			for(int i = 0; i < secs.length; i++){
+				String p = secs[i];
+				p = p.trim();
+				if(p.contains("=")){
+					updateValue(secs[i - 1],secs[i],buildVar(secs,i + 1));
+					break;
+				}
+			}
+		}else if(line.contains("write")){
+			String[] secs = line.trim().split(" ");
+			for(int i = 0; i < secs.length; i++){
+				String p = secs[i];
+				p = p.trim();
+				if(p.contains("write")){
+					write(buildVar(secs,i + 1));
+					break;
+				}
+			}
+		}else if(line.contains("print")){
+			String[] secs = line.trim().split(" ");
+			for(int i = 0; i < secs.length; i++){
+				String p = secs[i];
+				p = p.trim();
+				if(p.contains("print")){
+					print(buildVar(secs,i + 1));
+					break;
+				}
+			}
+		}else if(line.contains("clean")){
+			command("CLEAN");
+		}else if(line.contains("clear")){
+			command("CLEAR");
+		}else if(line.contains("place")){
+			String[] secs = line.trim().split(" ");
+			for(int i = 0; i < secs.length; i++){
+				String p = secs[i];
+				p = p.trim();
+				if(p.contains("place")){
+					command("PLACE " + buildVar(secs,i+1));
+					break;
+				}
+			}
+		}else if(line.contains("pause")){
+			this.screen.lineBuffer.addLine("Press any key to continue...");
+			draw();
+			this.screen.lineBuffer.waitForInterupt();
+		}else if(line.contains("draw")){
+			draw();
 		}
+
+		this.currentLine ++;
 	}
 	
 	private void parse(String pos){
@@ -92,7 +148,7 @@ public class Program {
 				if(pc.isEmpty() || pc.equals(" "))continue;
 				alteredLine +=pc + " ";
 			}
-			alteredLine.trim();
+			alteredLine = alteredLine.trim();
 		}
 		
 		if(alteredLine != ""){
@@ -108,7 +164,79 @@ public class Program {
 		return res.trim();
 	}
 	
-	private void addVar(String line){
-		
+	private void updateValue(String var, String op, String rest){
+		if(op.contains("+")){
+			int current = getValueFromVar(var);
+			int add = Interpriter.instance.compute(rest);
+			setValueToVar(var, current + add);
+		}else if(op.contains("-")){
+			int current = getValueFromVar(var);
+			int add = Interpriter.instance.compute(rest);
+			setValueToVar(var, current - add);
+		}
+	}
+	
+	private int getValueFromVar(String var){
+		return this.vars.get(var);
+	}
+	
+	private void setValueToVar(String var, int val){
+		this.vars.put(var, val);
+	}
+	
+	private String fillWithVars(String s){
+		String res = "";
+		String[] secs = s.split(" ");
+		for(int i = 0; i < secs.length; i++){
+			String c = secs[i];
+			if(this.vars.get(c) != null){
+				res += this.getValueFromVar(c) + " ";
+			}else{
+				res += c + " ";
+			}
+		}
+		return lookForSpecials(res);
+	}
+	
+	private String lookForSpecials(String line){
+		String res = "";
+		String[] secs = line.split(" ");
+		for(int i = 0; i < secs.length; i++){
+			String c = secs[i];
+			if(c.contains("$")){
+				String getter = c.substring(1);
+				getter = getter.toLowerCase();
+				if(getter.equals("date")){
+					res += Facts.getSDate() + " ";
+				}else if(getter.equals("time")){
+					res += "'" + Facts.getSTime() + "'" + " ";
+				}
+			}else{
+				res += c + " ";
+			}
+		}
+		return res.trim();
+	}
+	
+	private void print(String phrase){
+		phrase = fillWithVars(phrase);
+		command("PRINT "+phrase);
+	}
+	
+	private void write(String phrase){
+		phrase = fillWithVars(phrase);
+		command("WRITE "+phrase);
+	}
+	
+	private void draw(){
+		this.screen.fill();
+		this.screen.lineBuffer.render();
+		this.screen.rend.render();
+	}
+	
+	private void command(String cmd){
+		cmd = fillWithVars(cmd);
+		System.out.println(cmd);
+		Command.instance.parseSpecialCommand(screen, cmd);
 	}
 }

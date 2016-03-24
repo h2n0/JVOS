@@ -1,14 +1,25 @@
+clean;
+
 num x = 0;
 num y = 0;
 num e = 19;
 
-x += 1;
-y += 1;
+x += 10;
+y += 10;
 
 num z = e + 3;
 
-print x;
-print z;
-print $DAY;
+write "X:";
+write x;
 
-place x y 15;
+write "Y:";
+write z;
+
+place 40 40 15;
+draw;
+pause;
+
+write $DATE;
+write $TIME;
+write "finished";
+draw;

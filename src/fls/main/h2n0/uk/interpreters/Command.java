@@ -14,14 +14,12 @@ public class Command {
 	
 	public Command(){
 		instance = this;
-		this.commonComands = new String[]{"PRINT","TIME","CLEAR"};
+		this.commonComands = new String[]{"PRINT","TIME","CLEAR","WRITE"};
 	}
 	
-	public String parseSpecialCommand(ComputerScreen s,String line){
+	public void parseSpecialCommand(ComputerScreen s,String line){
 		String[] secs = line.toUpperCase().split(" ");
 		String cmd = secs[0].trim();
-		String res = "";
-		System.out.println(cmd);
 		if(isCommon(cmd)){
 			parseCommand(s.lineBuffer, line);
 		}else{
@@ -33,20 +31,38 @@ public class Command {
 				}else{
 					s.lineBuffer.addLine("Usage: COLOR (background) (forground)");
 				}
+			}else if(cmd.equals("PLACE")){
+				if(secs.length-1 == 3){
+					int x = Integer.parseInt(secs[2]);
+					int y = Integer.parseInt(secs[2]);
+					int col = Integer.parseInt(secs[3]);
+					s.rend.setPixel(x, y, col);
+				}else{
+					s.lineBuffer.addLine("Usage: PLACE (x) (y) (color)");
+				}
+				
+			}else if(cmd.equals("CLEAN")){
+				s.lineBuffer.clearBuffer();
+				s.fill();
+			}else if(cmd.equals("LOAD")){
+				if(secs.length-1 == 1){
+					s.loadProgram(buildString(secs,1));
+				}else{
+					s.lineBuffer.addLine("Usage: LOAD (file)");
+				}
+					
+			}else{
+				s.lineBuffer.addLine("Unknown Command");
 			}
 		}
-		
-		return res;
 	}
 	
 	public void parseCommand(LineBuffer s, String line){
 		String[] secs = line.toUpperCase().split(" ");
-		
-		
 		String cmd = secs[0].trim();
 		String res = "";
-		s.addLine(line);
 		if(cmd.equals("PRINT")){
+			s.addLine(line);
 			if(secs.length > 1){
 				res = buildString(secs, 1);
 				//Text.drawString("Answer: " + res,s.rend,5,5,Renderer.White);
@@ -54,16 +70,21 @@ public class Command {
 		}else if(cmd.equals("CLEAR")){
 			s.clearBuffer();
 		}else if(cmd.equals("TIME")){
+			s.addLine(line);
 			res = "Current time is: "+ Facts.getSTime();
+		}else if(cmd.equals("WRITE")){
+			res = buildString(secs,1);
 		}else{
+			s.addLine(line);
 			res = "Unknown Command";
 		}
-		s.addLine(res);
+		
+		if(res != "")s.addLine(res);
 	}
 	
 	private boolean isCommon(String cmd){
 		for(String com : this.commonComands){
-			if(com.contains(cmd))return true;
+			if(com.equals(cmd))return true;
 		}
 		return false;
 	}
@@ -73,22 +94,24 @@ public class Command {
 		if(!Interpriter.instance.isSum(parts)){
 			boolean started = false;
 			for(int i = s; i < parts.length; i++){
+				String c = parts[i];
+				if(c.equals("") || c.equals(" "))continue;
 				if(parts[i].indexOf("\"") != -1){
 					if(!started){
-						started=true;
 						boolean single = (i == parts.length-1);
 						if (single){
-							res += " "+parts[i].substring(parts[i].indexOf("\"")+1,parts[i].length()-1) + " ";
+							res += " "+c.substring(c.indexOf("\"")+1,c.length()-1) + " ";
+							single = false;
 							break;
 						}else{
-							res += parts[i].substring(parts[i].indexOf("\"")) + " ";
+							res += c.substring(c.indexOf("\"")) + " ";
 						}
 					}else{
-						res += parts[i].substring(0,parts[i].indexOf("\""));
+						res += parts[i].substring(0,c.indexOf("\""));
 						started = false;
 					}
 				}else{
-					res += parts[i] + " ";
+					res += c + " ";
 				}
 			}
 			return res.trim();

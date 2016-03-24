@@ -29,7 +29,7 @@ public class Interpriter {
 		Stack<String> ops = new Stack<String>();
 		for(int i = 0; i < math.length; i++){
 			String c = math[i];
-
+			if(c.equals("") || c.equals(" "))continue;
 			if(c.contains("+") || c.contains("-") || c.contains("/") || c.contains("*") || c.contains("^")){//Ops
 				int prec = getPresedance(c);
 				boolean los = isLeftOsc(c);

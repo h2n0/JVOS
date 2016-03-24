@@ -24,14 +24,24 @@ public abstract class ComputerScreen extends Screen{
 
 	@Override
 	public void render(Graphics g) {
-		this.draw();
+		if(this.prog == null){
+			this.draw();
+		}
 		g.drawImage(this.rend.getImage(),0, 0, null);
 	}
 
 	@Override
 	public void update() {
-		this.lineBuffer.tick();
-		this.tick();
+		if(this.prog == null){
+			this.lineBuffer.tick();
+			this.tick();
+		}else{
+			this.prog.nextLine();
+			if(!this.prog.running){
+				this.prog = null;
+				this.rend.useRegular();
+			}
+		}
 	}
 	
 	public void fill(){
@@ -52,6 +62,12 @@ public abstract class ComputerScreen extends Screen{
 	
 	public void setFillColor(int col){
 		this.fillColor = col;
+	}
+	
+	public void loadProgram(String file){
+		this.fill();
+		//this.rend.useChunky();
+		this.prog = new Program(this, file);
 	}
 
 }
