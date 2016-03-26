@@ -40,6 +40,8 @@ public abstract class ComputerScreen extends Screen{
 			if(!this.prog.running){
 				this.prog = null;
 				this.rend.useRegular();
+				this.lineBuffer.addSpace();
+				this.lineBuffer.addLine("Finished running program");
 			}
 		}
 	}
@@ -66,8 +68,8 @@ public abstract class ComputerScreen extends Screen{
 	
 	public void loadProgram(String file){
 		this.fill();
-		//this.rend.useChunky();
-		this.prog = new Program(this, file);
+	//	this.rend.useChunky();
+		this.prog = new Program(this, file.toLowerCase());
 	}
 
 }

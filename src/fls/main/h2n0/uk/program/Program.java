@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import fls.engine.main.io.FileIO;
-import fls.main.h2n0.uk.interpreters.Command;
+import fls.main.h2n0.uk.interpreter.Command;
 import fls.main.h2n0.uk.screens.ComputerScreen;
 import fls.main.h2n0.uk.util.Facts;
 import fls.main.h2n0.uk.util.Interpriter;
@@ -18,7 +18,7 @@ public class Program {
 	private String[] fileLines;
 	private int currentLine;
 	public int[] reg;
-	public HashMap<String,Integer> vars;
+	public HashMap<String,Variable> vars;
 	private ComputerScreen screen;
 	public Program(ComputerScreen s,String pos){
 		this.reg = new int[64];
@@ -28,6 +28,11 @@ public class Program {
 	}
 	
 	public void terminate(){
+		for(int i = 0; i < this.vars.size(); i++){
+			String key = ""+this.vars.keySet().toArray()[i];
+			Variable var = this.vars.get(key);
+			System.out.println(key + " : "+var.getSValue());
+		}
 		this.running = false;
 	}
 	
@@ -49,7 +54,17 @@ public class Program {
 				String p = secs[i];
 				p = p.trim();
 				if(p.contains("num")){
-					getValue(secs[i + 1],buildVar(secs,i + 3));
+					getValue(secs[i + 1],"num",buildVar(secs,i + 3));
+					break;
+				}
+			}
+		}else if(line.contains("bool")){
+			String[] secs = line.trim().split(" ");
+			for(int i = 0; i < secs.length; i++){
+				String p = secs[i];
+				p = p.trim();
+				if(p.contains("bool")){
+					getValue(secs[i + 1],"bool",buildVar(secs,i + 3));
 					break;
 				}
 			}
@@ -63,7 +78,7 @@ public class Program {
 					break;
 				}
 			}
-		}else if(line.contains("write")){
+		}else if(line.contains("write")){//Write to screen
 			String[] secs = line.trim().split(" ");
 			for(int i = 0; i < secs.length; i++){
 				String p = secs[i];
@@ -73,7 +88,7 @@ public class Program {
 					break;
 				}
 			}
-		}else if(line.contains("print")){
+		}else if(line.contains("print")){//Print to screen
 			String[] secs = line.trim().split(" ");
 			for(int i = 0; i < secs.length; i++){
 				String p = secs[i];
@@ -83,11 +98,11 @@ public class Program {
 					break;
 				}
 			}
-		}else if(line.contains("clean")){
+		}else if(line.contains("clean")){//Cleans the screen
 			command("CLEAN");
-		}else if(line.contains("clear")){
+		}else if(line.contains("clear")){//Clears the screen
 			command("CLEAR");
-		}else if(line.contains("place")){
+		}else if(line.contains("place")){//Places a pixel on the screen
 			String[] secs = line.trim().split(" ");
 			for(int i = 0; i < secs.length; i++){
 				String p = secs[i];
@@ -97,11 +112,11 @@ public class Program {
 					break;
 				}
 			}
-		}else if(line.contains("pause")){
+		}else if(line.contains("pause")){//Pauses the script and waits for input
 			this.screen.lineBuffer.addLine("Press any key to continue...");
 			draw();
 			this.screen.lineBuffer.waitForInterupt();
-		}else if(line.contains("draw")){
+		}else if(line.contains("draw")){//Updates the current display
 			draw();
 		}
 
@@ -110,12 +125,12 @@ public class Program {
 	
 	private void parse(String pos){
 		this.file = FileIO.instance.loadFile(pos);
-		this.vars = new HashMap<String,Integer>();
+		this.vars = new HashMap<String,Variable>();
 		String[] lines = this.file.split(";");
 		this.fileLines = lines;
 	}
 	
-	private void getValue(String var, String line){
+	private void getValue(String var,String type, String line){
 		String alteredLine = "";
 		if(line.contains("+") || line.contains("-") || line.contains("*") || line.contains("/") || line.contains("^")){//Using ops look for previous functions and resolve
 			List<String> secs = new ArrayList<String>();
@@ -130,13 +145,14 @@ public class Program {
 				}else{
 					boolean value = false;
 					for(int j = 0; j < this.vars.size(); j++){
-						if(this.vars.containsKey(c)){
+						if(getVariabeWithName(c) != null){
+							System.out.println(getVariabeWithName(c).getName());
 							value = true;
 							break;
 						}
 					}
 					if(value){
-						secs.add(""+this.vars.get(c));
+						secs.add(""+getVariabeWithName(c).getSValue());
 					}else{
 						secs.add(c);
 					}
@@ -150,10 +166,8 @@ public class Program {
 			}
 			alteredLine = alteredLine.trim();
 		}
-		
-		if(alteredLine != ""){
-			this.vars.put(var,Integer.valueOf(Interpriter.instance.compute(alteredLine)));
-		}else this.vars.put(var,Integer.valueOf(line));
+		Variable nvar = new Variable(var,type,alteredLine != ""?Interpriter.instance.compute(alteredLine):line.contains("true")?1:0);
+		this.vars.put(var, nvar);
 	}
 	
 	private String buildVar(String[] secs, int s){
@@ -165,23 +179,56 @@ public class Program {
 	}
 	
 	private void updateValue(String var, String op, String rest){
-		if(op.contains("+")){
-			int current = getValueFromVar(var);
-			int add = Interpriter.instance.compute(rest);
-			setValueToVar(var, current + add);
-		}else if(op.contains("-")){
-			int current = getValueFromVar(var);
-			int add = Interpriter.instance.compute(rest);
-			setValueToVar(var, current - add);
+		rest = fillWithVars(rest);
+		Variable cVar = this.getVariabeWithName(var);
+		
+		if(cVar.isNum()){
+			if(op.equals("=")){
+				int add = Interpriter.instance.compute(rest);
+				setValueToVar(cVar, add);
+			}else{
+				if(op.contains("+")){
+					int current = cVar.getIValue();
+					int add = Interpriter.instance.compute(rest);
+					setValueToVar(cVar, (current + add));
+				}else if(op.contains("-")){
+					int current = cVar.getIValue();
+					int add = Interpriter.instance.compute(rest);
+					setValueToVar(cVar, (current - add));
+				}else if(op.contains("/")){
+					int current = cVar.getIValue();
+					int add = Interpriter.instance.compute(rest);
+					setValueToVar(cVar, (current / add));
+				}else if(op.contains("*")){
+					int current = cVar.getIValue();
+					int add = Interpriter.instance.compute(rest);
+					setValueToVar(cVar, (current * add));
+				}else if(op.contains("^")){
+					int current = cVar.getIValue();
+					int add = Interpriter.instance.compute(rest);
+					setValueToVar(cVar, (current ^ add));
+				}
+			}
+		}else{
+			if(op.equals("=")){
+				int add = Interpriter.instance.compute(rest);
+				setValueToVar(cVar,add % 2);
+			}else{
+				if(op.contains("!")){
+					int current = cVar.getIValue();
+					int nw =  current==1?0:1;
+					setValueToVar(cVar,nw);
+				}
+			}
 		}
 	}
 	
-	private int getValueFromVar(String var){
+	private Variable getVariabeWithName(String var){
 		return this.vars.get(var);
 	}
 	
-	private void setValueToVar(String var, int val){
-		this.vars.put(var, val);
+	private void setValueToVar(Variable var, int val){
+		var.setValue(val);
 	}
 	
 	private String fillWithVars(String s){
@@ -189,8 +236,13 @@ public class Program {
 		String[] secs = s.split(" ");
 		for(int i = 0; i < secs.length; i++){
 			String c = secs[i];
-			if(this.vars.get(c) != null){
-				res += this.getValueFromVar(c) + " ";
+			if(getVariabeWithName(c) != null){
+				Variable var = getVariabeWithName(c);
+				if(var.isNum()){
+					res += var.getSValue() + " ";
+				}else{
+					res += var.getIValue();
+				}
 			}else{
 				res += c + " ";
 			}
@@ -207,9 +259,9 @@ public class Program {
 				String getter = c.substring(1);
 				getter = getter.toLowerCase();
 				if(getter.equals("date")){
-					res += Facts.getSDate() + " ";
+					res += '"' + Facts.getSDate() + '"' + " ";
 				}else if(getter.equals("time")){
-					res += "'" + Facts.getSTime() + "'" + " ";
+					res += '"' + Facts.getSTime() + '"' + " ";
 				}
 			}else{
 				res += c + " ";
@@ -236,7 +288,6 @@ public class Program {
 	
 	private void command(String cmd){
 		cmd = fillWithVars(cmd);
-		System.out.println(cmd);
 		Command.instance.parseSpecialCommand(screen, cmd);
 	}
 }

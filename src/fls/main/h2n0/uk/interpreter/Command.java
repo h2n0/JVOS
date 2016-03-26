@@ -1,4 +1,4 @@
-package fls.main.h2n0.uk.interpreters;
+package fls.main.h2n0.uk.interpreter;
 
 import fls.main.h2n0.uk.screens.ComputerScreen;
 import fls.main.h2n0.uk.screens.LineBuffer;

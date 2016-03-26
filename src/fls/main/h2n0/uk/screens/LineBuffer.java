@@ -1,6 +1,6 @@
 package fls.main.h2n0.uk.screens;
 
-import fls.main.h2n0.uk.interpreters.Command;
+import fls.main.h2n0.uk.interpreter.Command;
 import fls.main.h2n0.uk.util.Renderer;
 import fls.main.h2n0.uk.util.Text;
 

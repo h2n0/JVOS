@@ -14,7 +14,7 @@ public class Facts {
 	
 	public static int getMonth(){
 		updateTime();
-		return cal.get(Calendar.MONTH);
+		return cal.get(Calendar.MONTH) + 1;
 	}
 	
 	public static int getYear(){
