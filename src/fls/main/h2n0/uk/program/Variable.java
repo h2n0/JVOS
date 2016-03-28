@@ -13,7 +13,7 @@ public class Variable {
 	private String nm;
 	
 	public Variable(String name,String type, int value){
-		if(type.equals("bool")){
+		if(type.contains("bool")){
 			this.type = Type.bool;
 		}else{
 			this.type = Type.num;

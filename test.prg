@@ -11,6 +11,9 @@ y += 10;
 write "C:";
 write c;
 
+t != t;
+?;
+
 c *= 8;
 
 c = c ^ 2;
@@ -26,6 +29,11 @@ write "Z:";
 write z;
 
 place 40 40 15;
+place 40 41 15;
+place 40 42 15;
+place 40 43 15;
+place 40 44 15;
+place 40 45 15;
 draw;
 pause;
 

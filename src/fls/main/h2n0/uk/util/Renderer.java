@@ -33,6 +33,7 @@ public class Renderer {
 	private int[] chunkyPix;
 	private boolean[] chunyDirtyFlags;
 	private boolean useChunky;
+	private VirtualScreen currentScreen;
 
 	public Renderer(BufferedImage i) {
 		this.max = 255;
@@ -41,8 +42,9 @@ public class Renderer {
 		this.w = i.getWidth();
 		this.h = i.getHeight();
 		this.pixles = new int[w * h];
-		this.cw = this.w / 8;
-		this.ch = this.h / 8;
+		int s = 8;
+		this.cw = this.w / s;
+		this.ch = this.h / s;
 		this.chunkyPix = new int[this.cw * this.ch];
 		this.dirtyFlags = new boolean[this.h];
 		this.chunyDirtyFlags = new boolean[this.ch];
@@ -114,6 +116,7 @@ public class Renderer {
 			this.pixles[x + y * w] = this.color[col];
 			this.dirtyFlags[y] = true;
 		}else{
+			System.out.println("HUI");
 			for(int i = 0; i < 8*8; i++){
 				int ox = i % 8;
 				int oy = i / 8;

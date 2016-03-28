@@ -23,7 +23,6 @@ public class Command {
 		if(isCommon(cmd)){
 			parseCommand(s.lineBuffer, line);
 		}else{
-			s.lineBuffer.addLine(line);
 			if(cmd.equals("COLOR")){
 				if(secs.length-1 == 2){
 					s.setFillColor(Integer.parseInt(secs[1]));
@@ -33,14 +32,13 @@ public class Command {
 				}
 			}else if(cmd.equals("PLACE")){
 				if(secs.length-1 == 3){
-					int x = Integer.parseInt(secs[2]);
+					int x = Integer.parseInt(secs[1]);
 					int y = Integer.parseInt(secs[2]);
 					int col = Integer.parseInt(secs[3]);
 					s.rend.setPixel(x, y, col);
 				}else{
 					s.lineBuffer.addLine("Usage: PLACE (x) (y) (color)");
 				}
-				
 			}else if(cmd.equals("CLEAN")){
 				s.lineBuffer.clearBuffer();
 				s.fill();

@@ -94,7 +94,6 @@ public class LineBuffer {
 	public void useChar(char c){
 		if(!use)return;
 		if(waitForInt){
-			System.out.println(c);
 			this.screen.onReturn();
 			this.waitForInt = false;
 			return;

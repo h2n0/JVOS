@@ -68,7 +68,7 @@ public abstract class ComputerScreen extends Screen{
 	
 	public void loadProgram(String file){
 		this.fill();
-	//	this.rend.useChunky();
+		this.rend.useChunky();
 		this.prog = new Program(this, file.toLowerCase());
 	}
 

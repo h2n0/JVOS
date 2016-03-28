@@ -19,20 +19,21 @@ public class Program {
 	private int currentLine;
 	public int[] reg;
 	public HashMap<String,Variable> vars;
+	public HashMap<String,Function> func;
 	private ComputerScreen screen;
+	private Function currentFunc;
+	
+	
+	
 	public Program(ComputerScreen s,String pos){
 		this.reg = new int[64];
 		this.screen = s;
+		this.currentFunc = null;
 		parse(pos + ".prg");
 		start();
 	}
 	
 	public void terminate(){
-		for(int i = 0; i < this.vars.size(); i++){
-			String key = ""+this.vars.keySet().toArray()[i];
-			Variable var = this.vars.get(key);
-			System.out.println(key + " : "+var.getSValue());
-		}
 		this.running = false;
 	}
 	
@@ -118,6 +119,24 @@ public class Program {
 			this.screen.lineBuffer.waitForInterupt();
 		}else if(line.contains("draw")){//Updates the current display
 			draw();
+		}else if(line.contains("?")){
+			for(int i = 0; i < this.vars.size(); i++){
+				String key = ""+this.vars.keySet().toArray()[i];
+				System.out.println(key +  " : " + this.vars.get(key).getIValue());
+			}
+		}else if(line.contains("function")){//Function deceleration
+			int sl = this.currentLine;
+			int current = this.currentLine;
+			while(!this.fileLines[current].contains("}")){
+				current++;
+				if(current >= this.fileLines.length){
+					terminate();
+					this.screen.lineBuffer.addLine("Unclosed function");
+					return;
+				}
+			}
+			int el = current;
+			this.currentLine = el;
 		}
 
 		this.currentLine ++;
@@ -146,7 +165,6 @@ public class Program {
 					boolean value = false;
 					for(int j = 0; j < this.vars.size(); j++){
 						if(getVariabeWithName(c) != null){
-							System.out.println(getVariabeWithName(c).getName());
 							value = true;
 							break;
 						}
@@ -162,11 +180,17 @@ public class Program {
 				String pc = secs.get(i);
 				pc = pc.trim();
 				if(pc.isEmpty() || pc.equals(" "))continue;
-				alteredLine +=pc + " ";
+				alteredLine += pc + " ";
 			}
 			alteredLine = alteredLine.trim();
 		}
-		Variable nvar = new Variable(var,type,alteredLine != ""?Interpriter.instance.compute(alteredLine):line.contains("true")?1:0);
+		int newLine = -1;
+		if(type == "bool"){
+			newLine = line.contains("true")?1:0;
+		}else{
+			newLine = alteredLine!=""?Interpriter.instance.compute(alteredLine):Interpriter.instance.compute(line);
+		}
+		Variable nvar = new Variable(var,type,newLine);
 		this.vars.put(var, nvar);
 	}
 	
@@ -231,6 +255,10 @@ public class Program {
 		var.setValue(val);
 	}
 	
+	private Function getFunctionWithName(String name){
+		return this.func.get(name);
+	}
+	
 	private String fillWithVars(String s){
 		String res = "";
 		String[] secs = s.split(" ");
@@ -239,7 +267,7 @@ public class Program {
 			if(getVariabeWithName(c) != null){
 				Variable var = getVariabeWithName(c);
 				if(var.isNum()){
-					res += var.getSValue() + " ";
+					res += var.getIValue() + " ";
 				}else{
 					res += var.getIValue();
 				}
@@ -281,7 +309,6 @@ public class Program {
 	}
 	
 	private void draw(){
-		this.screen.fill();
 		this.screen.lineBuffer.render();
 		this.screen.rend.render();
 	}
@@ -289,5 +316,9 @@ public class Program {
 	private void command(String cmd){
 		cmd = fillWithVars(cmd);
 		Command.instance.parseSpecialCommand(screen, cmd);
+	}
+	
+	public void setFunctions(Function f){
+		this.currentFunc = f;
 	}
 }

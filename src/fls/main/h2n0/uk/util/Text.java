@@ -34,6 +34,7 @@ public class Text{
 			int length = line.length();
 			for(int j = 0; j < length; j++){
 				int pos = letters.indexOf(line.charAt(j));
+				if(pos == -1 || pos >= letters.length())return;
 				int tx = pos % 9;
 				int ty = pos / 9;
 				int[] secPix = new int[8*8];
